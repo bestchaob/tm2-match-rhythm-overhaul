@@ -31,6 +31,8 @@ class MainForm : Form
     ];
     static readonly ParamDef[] Safety = [
         new("absolute_hp_panic", 50, 500, 150, "绝对血量保底", "Panic HP"),
+        new("decision_lock_ticks", 100, 1000, 400, "决策锁定时长", "Decision lock"),
+        new("respawn_fight_ticks", 200, 5000, 2000, "复活血战时长", "Respawn fight"),
     ];
     static readonly int[] PosRecallDefaults = [-8, 8, -2, 15, -3];
     static readonly int[] PosOverstayDefaults = [15, -8, 3, -10, 10];
@@ -169,7 +171,7 @@ class MainForm : Form
 
         y = BuildSection("混沌回城 / Chaos Recall", "Chaos Recall", "越小越早回城，越大越容易赖线不回。", "Lower = earlier recall. Higher = more likely to overstay.", ChaosRecall, y);
         y = BuildSection("败方反扑 / Comeback", "Comeback", "滚动窗口追踪双方危险度。窗口越小越敏感，降低越多反扑越猛。", "Rolling danger window. Smaller = more sensitive. Higher reduce = stronger comeback.", Comeback, y);
-        y = BuildSection("安全网 / Safety Net", "Safety Net", "HP低于此值时无条件逃命。", "Unconditional escape below this HP.", Safety, y);
+        y = BuildSection("安全网 / Safety Net", "Safety Net", "HP保底 + 决策锁定 + 复活血战。防止残血抽搐和泉水转圈。", "HP floor + decision lock + respawn fight. Prevents stutter and fountain spinning.", Safety, y);
         y = BuildPosSection("位置偏移 — 回城", "Recall Offsets", "负值=贪线晚回  正值=保守早回", "- = greedier  + = safer", "recall", PosRecallDefaults, y);
         y = BuildPosSection("位置偏移 — 赖线", "Overstay Offsets", "正值=倾向赖线  负值=倾向纪律回城", "+ = stay more  - = recall sooner", "overstay", PosOverstayDefaults, y);
         y = BuildPosSection("位置偏移 — 危险感知", "Danger Offsets", "负值=残血不慌  正值=残血更敏感", "- = fearless  + = cautious", "danger", PosDangerDefaults, y);
@@ -304,7 +306,7 @@ class MainForm : Form
     void ApplyVanilla() { Set("recall_threshold_min",50); Set("recall_threshold_max",50); Set("overstay_min",0); Set("overstay_max",0); }
 
     void ResetDefaults() { ResetDefaultsToMemory(); foreach (var (k,v) in _values) { if (_sliders.TryGetValue(k, out var t)) t.Value=v; if (_inputs.TryGetValue(k, out var n)) n.Value=v; } }
-    void ResetDefaultsToMemory() { _values["recall_threshold_min"]=22;_values["recall_threshold_max"]=33;_values["overstay_min"]=10;_values["overstay_max"]=18;_values["danger_hp"]=15;_values["danger_floor"]=3;_values["danger_ring_window"]=64;_values["threshold_reduce"]=8;_values["overstay_increase"]=15;_values["safe_threshold_increase"]=5;_values["absolute_hp_panic"]=150;for(int i=0;i<5;i++){_values[$"pos_{PosNames[i].ToLower()}_recall"]=PosRecallDefaults[i];_values[$"pos_{PosNames[i].ToLower()}_overstay"]=PosOverstayDefaults[i];_values[$"pos_{PosNames[i].ToLower()}_danger"]=PosDangerDefaults[i];} }
+    void ResetDefaultsToMemory() { _values["recall_threshold_min"]=22;_values["recall_threshold_max"]=33;_values["overstay_min"]=10;_values["overstay_max"]=18;_values["danger_hp"]=15;_values["danger_floor"]=3;_values["danger_ring_window"]=64;_values["threshold_reduce"]=8;_values["overstay_increase"]=15;_values["safe_threshold_increase"]=5;_values["absolute_hp_panic"]=150;_values["decision_lock_ticks"]=400;_values["respawn_fight_ticks"]=2000;for(int i=0;i<5;i++){_values[$"pos_{PosNames[i].ToLower()}_recall"]=PosRecallDefaults[i];_values[$"pos_{PosNames[i].ToLower()}_overstay"]=PosOverstayDefaults[i];_values[$"pos_{PosNames[i].ToLower()}_danger"]=PosDangerDefaults[i];} }
     void Set(string key, int v) { if (_sliders.TryGetValue(key, out var s)) s.Value = v; if (_inputs.TryGetValue(key, out var n)) n.Value = v; _values[key] = v; }
 
     static string FindModDir() { var d = Path.GetDirectoryName(Application.ExecutablePath); if (d != null && Path.GetFileName(d) == "editor") d = Path.GetDirectoryName(d); return d ?? "."; }

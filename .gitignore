@@ -1,2 +1,4 @@
 .workbuddy/
 *.exe
+!*.zip
+*.dll
